@@ -111,6 +111,7 @@ export async function POST(
           if (!config.channels.weixin) config.channels.weixin = {}
           config.channels.weixin.token = token
           config.channels.weixin.enabled = true
+          config.channels.weixin.allowFrom = ["*"]
           writeConfig(instance.name, config)
 
           // Clear QR ID from description

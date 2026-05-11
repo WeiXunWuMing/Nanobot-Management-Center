@@ -78,7 +78,7 @@ export type NanobotConfig = z.infer<typeof configSchema>
 export const PROVIDERS = [
   { name: "anthropic", label: "Anthropic", modelPlaceholder: "anthropic/claude-sonnet-4-20250514" },
   { name: "openai", label: "OpenAI", modelPlaceholder: "gpt-4o" },
-  { name: "deepseek", label: "DeepSeek", modelPlaceholder: "deepseek-chat" },
+  { name: "deepseek", label: "DeepSeek", modelPlaceholder: "deepseek-v4-flash" },
   { name: "gemini", label: "Google Gemini", modelPlaceholder: "gemini-2.0-flash" },
   { name: "openrouter", label: "OpenRouter", modelPlaceholder: "anthropic/claude-sonnet-4" },
   { name: "ollama", label: "Ollama (本地)", modelPlaceholder: "llama3.2" },
