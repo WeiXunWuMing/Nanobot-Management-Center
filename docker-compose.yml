@@ -1,0 +1,16 @@
+services:
+  nanobot-admin:
+    build: .
+    container_name: nanobot-admin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/1panel/docker/compose/nanobot/profiles:/data/profiles
+      - ./data:/app/data
+    environment:
+      - DOCKER_SOCKET=/var/run/docker.sock
+      - PROFILES_DIR=/data/profiles
+      - DB_PATH=/app/data/nanobot-admin.db
+      - NANOBOT_IMAGE=ghcr.io/nanobot-ai/nanobot:latest
