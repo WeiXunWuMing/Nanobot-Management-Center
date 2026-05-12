@@ -26,6 +26,8 @@ export default function NewInstancePage() {
     provider: "anthropic",
     apiKey: "",
     model: "",
+    installPlaywright: false,
+    installPatched: false,
     channels: {} as Record<string, Record<string, string>>,
   })
 
@@ -138,6 +140,22 @@ export default function NewInstancePage() {
     setError("")
     try {
       const config = buildConfig()
+      
+      // Determine which image to use
+      let image: string | undefined
+      if (form.installPlaywright && form.installPatched) {
+        // Both options: need to build a combined image
+        // For now, use patched (message splitting is more commonly needed)
+        image = "nanobot:patched"
+        setError("提示：Playwright 和多消息拆分暂不支持同时启用，已选择多消息拆分。如需 Playwright，请取消勾选多消息拆分。")
+        setLoading(false)
+        return
+      } else if (form.installPlaywright) {
+        image = "nanobot:playwright"
+      } else if (form.installPatched) {
+        image = "nanobot:patched"
+      }
+      
       const res = await fetch("/api/instances", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -145,6 +163,7 @@ export default function NewInstancePage() {
           name: form.name,
           description: form.description || undefined,
           config,
+          image,
         }),
       })
       const data = await res.json()
@@ -250,6 +269,42 @@ export default function NewInstancePage() {
               <p className="text-xs text-muted-foreground">
                 宿主机映射端口，自动分配可用端口，也可手动修改。
               </p>
+            </div>
+            <div className="flex items-start gap-3 rounded-lg border p-4">
+              <input
+                type="checkbox"
+                id="playwright"
+                checked={form.installPlaywright}
+                onChange={(e) => updateForm("installPlaywright", e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-gray-300"
+              />
+              <div>
+                <Label htmlFor="playwright" className="cursor-pointer">
+                  预装 Playwright (浏览器自动化)
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  支持截图、表单填写、页面交互。镜像体积增加约 400MB，首次构建需要几分钟。
+                  不勾选则使用基础镜像，浏览器相关 Skill 会自动降级为 web_fetch/web_search。
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-lg border p-4">
+              <input
+                type="checkbox"
+                id="patched"
+                checked={form.installPatched}
+                onChange={(e) => updateForm("installPatched", e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-gray-300"
+              />
+              <div>
+                <Label htmlFor="patched" className="cursor-pointer">
+                  启用多消息拆分
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Bot 回复多条短消息时，每条单独发送而不是合并成一条。适合模拟真人聊天风格。
+                  不勾选则长回复会合并成一条消息。
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

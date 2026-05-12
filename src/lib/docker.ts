@@ -60,6 +60,7 @@ export async function ensureImage(): Promise<void> {
 export interface CreateContainerOptions {
   name: string
   port: number
+  image?: string
   cpuLimit?: number
   memoryLimit?: number
 }
@@ -68,14 +69,84 @@ export function getContainerName(instanceName: string) {
   return `${CONTAINER_NAME_PREFIX}${instanceName}`
 }
 
+export async function ensureImageByName(imageName: string): Promise<void> {
+  try {
+    await docker.getImage(imageName).inspect()
+    return
+  } catch {
+    // Image not found
+  }
+
+  // Check if it's a local image that needs to be built
+  if (imageName === NANOBOT_IMAGE) {
+    console.log(`[nanobot-admin] Image ${imageName} not found, building from PyPI...`)
+    const dockerfilePath = path.join(process.cwd(), "nanobot.Dockerfile")
+    if (!fs.existsSync(dockerfilePath)) {
+      throw new Error(`Dockerfile not found at ${dockerfilePath}`)
+    }
+    const stream = await docker.buildImage(
+      { context: process.cwd(), src: ["nanobot.Dockerfile"] },
+      { t: imageName, dockerfile: "nanobot.Dockerfile" }
+    )
+    await new Promise<void>((resolve, reject) => {
+      docker.modem.followProgress(stream, (err: Error | null) => {
+        if (err) reject(err)
+        else resolve()
+      })
+    })
+    console.log(`[nanobot-admin] Image ${imageName} built successfully`)
+  } else if (imageName.includes("playwright")) {
+    console.log(`[nanobot-admin] Image ${imageName} not found, building with Playwright...`)
+    const dockerfilePath = path.join(process.cwd(), "nanobot-playwright.Dockerfile")
+    if (!fs.existsSync(dockerfilePath)) {
+      throw new Error(`Dockerfile not found at ${dockerfilePath}`)
+    }
+    // Ensure base image exists first
+    await ensureImageByName(NANOBOT_IMAGE)
+    const stream = await docker.buildImage(
+      { context: process.cwd(), src: ["nanobot-playwright.Dockerfile"] },
+      { t: imageName, dockerfile: "nanobot-playwright.Dockerfile" }
+    )
+    await new Promise<void>((resolve, reject) => {
+      docker.modem.followProgress(stream, (err: Error | null) => {
+        if (err) reject(err)
+        else resolve()
+      })
+    })
+    console.log(`[nanobot-admin] Image ${imageName} built successfully`)
+  } else if (imageName.includes("patched")) {
+    console.log(`[nanobot-admin] Image ${imageName} not found, building with message split patch...`)
+    const dockerfilePath = path.join(process.cwd(), "nanobot-patched.Dockerfile")
+    if (!fs.existsSync(dockerfilePath)) {
+      throw new Error(`Dockerfile not found at ${dockerfilePath}`)
+    }
+    // Ensure base image exists first
+    await ensureImageByName(NANOBOT_IMAGE)
+    const stream = await docker.buildImage(
+      { context: process.cwd(), src: ["nanobot-patched.Dockerfile", "data/patches/"] },
+      { t: imageName, dockerfile: "nanobot-patched.Dockerfile" }
+    )
+    await new Promise<void>((resolve, reject) => {
+      docker.modem.followProgress(stream, (err: Error | null) => {
+        if (err) reject(err)
+        else resolve()
+      })
+    })
+    console.log(`[nanobot-admin] Image ${imageName} built successfully`)
+  } else {
+    throw new Error(`Image ${imageName} not found and cannot be built`)
+  }
+}
+
 export async function createAndStartContainer(opts: CreateContainerOptions): Promise<Dockerode.Container> {
-  await ensureImage()
+  const image = opts.image || NANOBOT_IMAGE
+  await ensureImageByName(image)
 
   const containerName = getContainerName(opts.name)
   const profilePath = path.join(PROFILES_BASE_DIR, opts.name)
 
   const container = await docker.createContainer({
-    Image: NANOBOT_IMAGE,
+    Image: image,
     name: containerName,
     Cmd: ["gateway"],
     ExposedPorts: {

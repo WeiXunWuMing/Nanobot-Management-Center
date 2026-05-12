@@ -61,10 +61,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { name, description, config } = body as {
+    const { name, description, config, image } = body as {
       name: string
       description?: string
       config?: Record<string, unknown>
+      image?: string
     }
 
     if (!name || !/^[a-z][a-z0-9-]*$/.test(name)) {
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
       writeConfig(name, config)
     }
 
-    const container = await createAndStartContainer({ name, port })
+    const container = await createAndStartContainer({ name, port, image })
     const containerInfo = await container.inspect()
 
     db.update(instances)

@@ -266,7 +266,12 @@ export default function InstanceDetailPage() {
 
       <Separator />
 
-      <Tabs defaultValue="basic">
+      <Tabs defaultValue="basic" onValueChange={(value) => {
+        // Sync JSON editor when switching to JSON tab
+        if (value === "json") {
+          setJsonConfig(JSON.stringify(config, null, 2))
+        }
+      }}>
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="basic">基础配置</TabsTrigger>
           <TabsTrigger value="channels">渠道配置</TabsTrigger>
@@ -295,7 +300,11 @@ export default function InstanceDetailPage() {
           <div className="h-[600px] rounded-md border">
             <JsonEditor value={jsonConfig} onChange={(v) => { setJsonConfig(v); try { setConfig(JSON.parse(v)); setDirty(true) } catch {} }} />
           </div>
-          <div className="mt-4 flex justify-end">
+          <div className="mt-4 flex justify-between">
+            <Button variant="outline" onClick={() => fetchInstance()}>
+              <RefreshCw className="mr-1.5 h-4 w-4" />
+              从磁盘刷新
+            </Button>
             <Button onClick={handleSaveJson} disabled={saving}>
               {saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />}
               保存 JSON
