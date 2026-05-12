@@ -23,13 +23,17 @@ interface QrState {
 }
 
 const CHANNEL_DEFS = [
-  { name: "weixin", label: "微信", icon: "💬", fields: [] },
+  { name: "weixin", label: "个人微信", icon: "💬", fields: [{ key: "token", label: "Token (QR登录自动获取)", type: "password" }] },
   { name: "telegram", label: "Telegram", icon: "✈️", fields: [{ key: "token", label: "Bot Token", type: "password" }] },
   { name: "discord", label: "Discord", icon: "🎮", fields: [{ key: "token", label: "Bot Token", type: "password" }] },
-  { name: "slack", label: "Slack", icon: "💼", fields: [{ key: "token", label: "Bot Token", type: "password" }, { key: "appToken", label: "App Token", type: "password" }, { key: "signingSecret", label: "Signing Secret", type: "password" }] },
-  { name: "feishu", label: "飞书", icon: "🐦", fields: [{ key: "appId", label: "App ID", type: "text" }, { key: "appSecret", label: "App Secret", type: "password" }] },
-  { name: "dingtalk", label: "钉钉", icon: "📌", fields: [{ key: "appKey", label: "App Key", type: "text" }, { key: "appSecret", label: "App Secret", type: "password" }] },
-  { name: "wecom", label: "企业微信", icon: "🏢", fields: [{ key: "botId", label: "Bot ID", type: "text" }, { key: "secret", label: "Secret", type: "password" }] },
+  { name: "slack", label: "Slack", icon: "💼", fields: [{ key: "bot_token", label: "Bot Token", type: "password" }, { key: "app_token", label: "App Token", type: "password" }] },
+  { name: "feishu", label: "飞书", icon: "🐦", fields: [{ key: "app_id", label: "App ID", type: "text" }, { key: "app_secret", label: "App Secret", type: "password" }] },
+  { name: "dingtalk", label: "钉钉", icon: "📌", fields: [{ key: "client_id", label: "Client ID", type: "text" }, { key: "client_secret", label: "Client Secret", type: "password" }] },
+  { name: "wecom", label: "企业微信", icon: "🏢", fields: [{ key: "bot_id", label: "Bot ID", type: "text" }, { key: "secret", label: "Secret", type: "password" }] },
+  { name: "qq", label: "QQ", icon: "🐧", fields: [{ key: "app_id", label: "App ID", type: "text" }, { key: "secret", label: "Secret", type: "password" }] },
+  { name: "email", label: "邮件", icon: "📧", fields: [{ key: "imap_host", label: "IMAP Host", type: "text" }, { key: "imap_username", label: "IMAP 用户名", type: "text" }, { key: "imap_password", label: "IMAP 密码", type: "password" }, { key: "smtp_host", label: "SMTP Host", type: "text" }, { key: "smtp_username", label: "SMTP 用户名", type: "text" }, { key: "smtp_password", label: "SMTP 密码", type: "password" }] },
+  { name: "websocket", label: "WebSocket", icon: "🔌", fields: [{ key: "host", label: "监听地址", type: "text" }, { key: "port", label: "端口", type: "text" }, { key: "token", label: "Token", type: "password" }] },
+  { name: "whatsapp", label: "WhatsApp", icon: "📱", fields: [{ key: "bridge_url", label: "Bridge URL", type: "text" }, { key: "bridge_token", label: "Bridge Token", type: "password" }] },
 ]
 
 export function ChannelConfig({ instanceId, config, onChange }: ChannelConfigProps) {

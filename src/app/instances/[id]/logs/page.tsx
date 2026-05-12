@@ -43,7 +43,7 @@ function cleanDockerLogs(raw: string): string {
 }
 
 function formatLogLine(line: string): string {
-  // Docker timestamp format: 2026-05-12T01:59:30.835866159Z or 2026-05-12T01:59:30.835866159Z message
+  // Docker timestamp format: 2026-05-12T01:59:30.835866159Z
   const timestampMatch = line.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z?)\s*(.*)/s)
   if (!timestampMatch) return line
 
@@ -51,15 +51,18 @@ function formatLogLine(line: string): string {
   try {
     const date = new Date(timestamp)
     if (isNaN(date.getTime())) return line
-    // Convert to UTC+8
-    const utc8 = new Date(date.getTime() + 8 * 60 * 60 * 1000)
-    const y = utc8.getFullYear()
-    const m = String(utc8.getMonth() + 1).padStart(2, "0")
-    const d = String(utc8.getDate()).padStart(2, "0")
-    const h = String(utc8.getHours()).padStart(2, "0")
-    const min = String(utc8.getMinutes()).padStart(2, "0")
-    const s = String(utc8.getSeconds()).padStart(2, "0")
-    return `${y}-${m}-${d} ${h}:${min}:${s} ${message}`
+    // Use toLocaleString with Asia/Shanghai timezone
+    const formatted = date.toLocaleString("zh-CN", {
+      timeZone: "Asia/Shanghai",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    })
+    return `${formatted} ${message}`
   } catch {
     return line
   }

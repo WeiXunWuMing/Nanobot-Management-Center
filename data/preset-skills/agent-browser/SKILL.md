@@ -1,7 +1,7 @@
 ---
 name: agent-browser
 description: Browser automation skill using Playwright. Use when you need to browse websites, fill forms, take screenshots, or interact with web pages.
-metadata: {"nanobot":{"emoji":"🌐","requires":{"bins":["playwright"]}}}
+metadata: {"nanobot":{"emoji":"🌐"}}
 ---
 # Agent Browser
 

@@ -29,15 +29,13 @@ Use the sandbox for safe execution.
 ## Python Execution
 
 ```python
-# Simple execution
-result = exec("print('Hello World')", timeout=30)
+# Simple execution using exec tool
+# Use the built-in exec tool to run Python code
+print("Hello World")
 
-# With input
-code = """
+# Multi-line code
 import sys
 print(sys.version)
-"""
-exec(code)
 ```
 
 ## JavaScript Execution
@@ -49,10 +47,9 @@ console.log("Hello from Node.js");
 
 ## Safety Features
 
-1. **Timeout**: Commands timeout after 60 seconds
-2. **Isolation**: Each execution runs in its own context
-3. **Output Limit**: Output truncated to 10000 characters
-4. **Resource Limits**: CPU and memory limits enforced
+1. **Timeout**: Commands timeout after 60 seconds (configured in tools.exec.timeout)
+2. **Output Limit**: Output truncated to 10000 characters
+3. **Sandbox**: Optional bwrap sandbox backend for isolation
 
 ## Best Practices
 

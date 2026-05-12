@@ -1,7 +1,7 @@
 ---
 name: tavily
 description: AI-optimized web search using Tavily API. Use when you need high-quality search results optimized for AI consumption.
-metadata: {"nanobot":{"emoji":"🔍"}}
+metadata: {"nanobot":{"emoji":"🔍","requires":{"env":["TAVILY_API_KEY"]}}}
 ---
 # Tavily Search
 

@@ -1,5 +1,5 @@
 ---
-name: github
+name: github-cli
 description: GitHub CLI operations. Use when you need to manage repositories, create issues, pull requests, or interact with GitHub.
 metadata: {"nanobot":{"emoji":"🐙","requires":{"bins":["gh"]}}}
 ---

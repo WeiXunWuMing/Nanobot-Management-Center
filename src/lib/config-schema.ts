@@ -92,10 +92,15 @@ export const PROVIDERS = [
 ] as const
 
 export const CHANNELS = [
+  { name: "weixin", label: "个人微信", fields: ["token"] },
   { name: "telegram", label: "Telegram", fields: ["token"] },
   { name: "discord", label: "Discord", fields: ["token"] },
-  { name: "slack", label: "Slack", fields: ["token", "appToken", "signingSecret"] },
-  { name: "wechat", label: "微信公众号", fields: ["appId", "appSecret", "token"] },
-  { name: "feishu", label: "飞书", fields: ["appId", "appSecret"] },
-  { name: "dingtalk", label: "钉钉", fields: ["appKey", "appSecret"] },
+  { name: "slack", label: "Slack", fields: ["bot_token", "app_token"] },
+  { name: "feishu", label: "飞书", fields: ["app_id", "app_secret"] },
+  { name: "dingtalk", label: "钉钉", fields: ["client_id", "client_secret"] },
+  { name: "wecom", label: "企业微信", fields: ["bot_id", "secret"] },
+  { name: "qq", label: "QQ", fields: ["app_id", "secret"] },
+  { name: "email", label: "邮件", fields: ["imap_host", "imap_username", "imap_password", "smtp_host", "smtp_username", "smtp_password"] },
+  { name: "websocket", label: "WebSocket", fields: ["host", "port", "token"] },
+  { name: "whatsapp", label: "WhatsApp", fields: ["bridge_url", "bridge_token"] },
 ] as const
