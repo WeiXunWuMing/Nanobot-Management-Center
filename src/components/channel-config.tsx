@@ -53,10 +53,6 @@ export function ChannelConfig({ instanceId, config, onChange }: ChannelConfigPro
     if (!newConfig.channels) newConfig.channels = {}
     if (!newConfig.channels[name]) newConfig.channels[name] = {}
     newConfig.channels[name].enabled = enabled
-    // Add allowFrom for weixin channel
-    if (name === "weixin" && enabled) {
-      newConfig.channels[name].allowFrom = ["*"]
-    }
     onChange(newConfig)
   }
 
@@ -151,7 +147,6 @@ export function ChannelConfig({ instanceId, config, onChange }: ChannelConfigPro
     if (!newConfig.channels.weixin) newConfig.channels.weixin = {}
     newConfig.channels.weixin.token = manualToken.trim()
     newConfig.channels.weixin.enabled = true
-    newConfig.channels.weixin.allowFrom = ["*"]
     onChange(newConfig)
     setManualToken("")
     setShowManualInput(false)

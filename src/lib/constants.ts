@@ -25,10 +25,11 @@ function detectProfilesDir(): string {
 export const PROFILES_BASE_DIR = detectProfilesDir()
 export const DEFAULT_PROFILE_DIR = path.join(PROFILES_BASE_DIR, "default")
 
-export const NANOBOT_IMAGE = process.env.NANOBOT_IMAGE || "nanobot:latest"
+export const NANOBOT_IMAGE = process.env.NANOBOT_IMAGE || "nanobot:api"
 export const NANOBOT_PLAYWRIGHT_IMAGE = process.env.NANOBOT_PLAYWRIGHT_IMAGE || "nanobot:playwright"
 export const NANOBOT_PATCHED_IMAGE = process.env.NANOBOT_PATCHED_IMAGE || "nanobot:patched"
 export const NANOBOT_CONTAINER_PORT = 18790
+export const NANOBOT_API_PORT = 8900
 export const NANOBOT_WEBSOCKET_PORT = 8765
 export const PORT_RANGE_START = 18790
 export const PORT_RANGE_END = 18890

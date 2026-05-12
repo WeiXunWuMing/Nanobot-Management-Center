@@ -23,7 +23,6 @@ import { AgentConfig } from "@/components/agent-config"
 import { ChannelConfig } from "@/components/channel-config"
 import { ToolsConfig } from "@/components/tools-config"
 import { PersonaEditor } from "@/components/persona-editor"
-import { ChatPanel } from "@/components/chat-panel"
 
 interface Instance {
   id: string
@@ -86,6 +85,28 @@ export default function InstanceDetailPage() {
   const [jsonConfig, setJsonConfig] = useState("")
   const [dirty, setDirty] = useState(false)
 
+  // System-managed fields that should be auto-added when saving
+  function applySystemFields(cfg: Record<string, unknown>): Record<string, unknown> {
+    const result = JSON.parse(JSON.stringify(cfg))
+    // Ensure weixin channel has allowFrom
+    if (result.channels?.weixin?.enabled) {
+      if (!result.channels.weixin.allowFrom || result.channels.weixin.allowFrom.length === 0) {
+        result.channels.weixin.allowFrom = ["*"]
+      }
+    }
+    return result
+  }
+
+  // Remove system-managed fields for display
+  function filterSystemFields(cfg: Record<string, unknown>): Record<string, unknown> {
+    const result = JSON.parse(JSON.stringify(cfg))
+    // Remove allowFrom from display (system auto-manages it)
+    if (result.channels?.weixin?.allowFrom) {
+      delete result.channels.weixin.allowFrom
+    }
+    return result
+  }
+
   const fetchInstance = useCallback(async () => {
     try {
       const res = await fetch(`/api/instances/${id}`)
@@ -99,7 +120,8 @@ export default function InstanceDetailPage() {
         setInstance(data.instance)
         if (data.instance.config) {
           setConfig(data.instance.config)
-          setJsonConfig(JSON.stringify(data.instance.config, null, 2))
+          // Show filtered config in JSON editor
+          setJsonConfig(JSON.stringify(filterSystemFields(data.instance.config), null, 2))
         }
         setDirty(false)
       }
@@ -116,17 +138,18 @@ export default function InstanceDetailPage() {
 
   function handleConfigChange(newConfig: Record<string, unknown>) {
     setConfig(newConfig)
-    setJsonConfig(JSON.stringify(newConfig, null, 2))
+    setJsonConfig(JSON.stringify(filterSystemFields(newConfig), null, 2))
     setDirty(true)
   }
 
   async function handleSave() {
     setSaving(true)
     try {
+      const configToSave = applySystemFields(config)
       const res = await fetch(`/api/instances/${id}/config`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ config }),
+        body: JSON.stringify({ config: configToSave }),
       })
       if (res.ok) {
         setDirty(false)
@@ -146,13 +169,14 @@ export default function InstanceDetailPage() {
     setSaving(true)
     try {
       const parsed = JSON.parse(jsonConfig)
+      const configToSave = applySystemFields(parsed)
       const res = await fetch(`/api/instances/${id}/config`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ config: parsed }),
+        body: JSON.stringify({ config: configToSave }),
       })
       if (res.ok) {
-        setConfig(parsed)
+        setConfig(configToSave)
         setDirty(false)
         fetchInstance()
       } else {
@@ -274,18 +298,13 @@ export default function InstanceDetailPage() {
           setJsonConfig(JSON.stringify(config, null, 2))
         }
       }}>
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="chat">聊天</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="basic">基础配置</TabsTrigger>
           <TabsTrigger value="channels">渠道配置</TabsTrigger>
           <TabsTrigger value="tools">工具配置</TabsTrigger>
           <TabsTrigger value="persona">人设管理</TabsTrigger>
           <TabsTrigger value="json">JSON 编辑器</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="chat" className="mt-4">
-          <ChatPanel instanceName={instance.name} wsPort={instance.wsPort} status={instance.status} />
-        </TabsContent>
 
         <TabsContent value="basic" className="mt-4">
           <AgentConfig config={config} onChange={handleConfigChange} />

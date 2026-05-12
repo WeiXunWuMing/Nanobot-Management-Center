@@ -201,6 +201,19 @@ export function InstanceCard({ instance, onRefresh }: InstanceCardProps) {
               </Button>
             </>
           )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleAction("rebuild")}
+            disabled={loading !== null}
+          >
+            {loading === "rebuild" ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RotateCw className="mr-1.5 h-3.5 w-3.5" />
+            )}
+            重建
+          </Button>
           <div className="flex-1" />
           <Button size="sm" variant="ghost" asChild>
             <Link href={`/instances/${instance.id}`}>

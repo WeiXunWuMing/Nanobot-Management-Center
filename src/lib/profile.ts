@@ -218,3 +218,109 @@ export function uninstallSkill(instanceName: string, skillName: string): { succe
   fs.rmSync(targetDir, { recursive: true, force: true })
   return { success: true }
 }
+
+const DEFAULT_PERSONA_FILES: Record<string, string> = {
+  "SOUL.md": `# Agent 人格
+
+我是 nanobot 🐈，一个个人 AI 助手。
+
+## 核心原则
+- 用行动解决问题，而非描述
+- 保持简洁回复
+- 诚实表达已知/未知
+- 友好好奇
+
+## 执行规则
+- 单步任务立即执行
+- 多步任务先列计划等待确认
+- 写前先读
+- 失败时诊断重试
+`,
+  "USER.md": `# 用户画像
+
+## 基本信息
+- 姓名：
+- 时区：Asia/Shanghai
+- 语言：中文
+
+## 偏好
+- 沟通风格：
+- 回复长度：
+- 技术水平：
+
+## 工作上下文
+- 角色：
+- 项目：
+- 工具：
+
+## 兴趣主题
+
+## 特殊指令
+`,
+  "AGENTS.md": `# Agent 指令
+
+## 定时提醒
+使用内置 cron 工具创建/列出/删除任务，不要将提醒写入 MEMORY.md。
+
+## 心跳任务
+HEARTBEAT.md 每 30 分钟检查一次，用于管理周期性任务。
+`,
+  "TOOLS.md": `# 工具使用指南
+
+## exec
+- 超时 60 秒
+- 危险命令被阻断
+- 输出截断 10000 字符
+
+## glob
+- 递归匹配
+- 支持 entry_type="dirs"
+- 分页
+
+## grep
+- 内容搜索
+- 支持 glob 过滤
+- 支持上下文行
+
+## cron
+- 参考 cron skill
+`,
+  "HEARTBEAT.md": `# 心跳任务
+
+每 30 分钟由 Agent 检查一次。
+
+## Active Tasks
+
+（在此添加周期性任务）
+
+## Completed
+
+（已完成的任务）
+`,
+}
+
+export function ensureWorkspaceFiles(instanceName: string) {
+  const workspaceDir = getWorkspacePath(instanceName)
+  if (!fs.existsSync(workspaceDir)) {
+    fs.mkdirSync(workspaceDir, { recursive: true })
+  }
+
+  for (const [filename, content] of Object.entries(DEFAULT_PERSONA_FILES)) {
+    const filePath = path.join(workspaceDir, filename)
+    if (!fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, content, "utf-8")
+    }
+  }
+
+  // Ensure memory directory exists
+  const memoryDir = path.join(workspaceDir, "memory")
+  if (!fs.existsSync(memoryDir)) {
+    fs.mkdirSync(memoryDir, { recursive: true })
+  }
+
+  // Ensure MEMORY.md exists
+  const memoryMd = path.join(memoryDir, "MEMORY.md")
+  if (!fs.existsSync(memoryMd)) {
+    fs.writeFileSync(memoryMd, "# 长期记忆\n\n此文件存储跨会话的重要信息。\n", "utf-8")
+  }
+}

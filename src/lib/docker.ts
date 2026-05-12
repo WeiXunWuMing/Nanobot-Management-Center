@@ -2,6 +2,7 @@ import Dockerode from "dockerode"
 import {
   NANOBOT_IMAGE,
   NANOBOT_CONTAINER_PORT,
+  NANOBOT_API_PORT,
   NANOBOT_WEBSOCKET_PORT,
   CONTAINER_NAME_PREFIX,
   INSTANCE_LABEL_PREFIX,
@@ -11,6 +12,7 @@ import {
   PROFILES_BASE_DIR,
   getDockerSocketPath,
 } from "./constants"
+import { allocateWsPort } from "./port-allocator"
 import path from "path"
 import fs from "fs"
 
@@ -147,18 +149,19 @@ export async function createAndStartContainer(opts: CreateContainerOptions): Pro
   const containerName = getContainerName(opts.name)
   const profilePath = path.join(PROFILES_BASE_DIR, opts.name)
 
+  // Always allocate a WebSocket port for WebUI access
+  const wsPort = opts.wsPort || (await allocateWsPort())
+
   const portBindings: Record<string, Array<{ HostIp: string; HostPort: string }>> = {
     [`${NANOBOT_CONTAINER_PORT}/tcp`]: [{ HostIp: "127.0.0.1", HostPort: String(opts.port) }],
+    [`${NANOBOT_API_PORT}/tcp`]: [{ HostIp: "127.0.0.1", HostPort: String(opts.port + 1) }],
+    [`${NANOBOT_WEBSOCKET_PORT}/tcp`]: [{ HostIp: "0.0.0.0", HostPort: String(wsPort) }],
   }
 
   const exposedPorts: Record<string, Record<string, never>> = {
     [`${NANOBOT_CONTAINER_PORT}/tcp`]: {},
-  }
-
-  // Add WebSocket port mapping if provided
-  if (opts.wsPort) {
-    portBindings[`${NANOBOT_WEBSOCKET_PORT}/tcp`] = [{ HostIp: "0.0.0.0", HostPort: String(opts.wsPort) }]
-    exposedPorts[`${NANOBOT_WEBSOCKET_PORT}/tcp`] = {}
+    [`${NANOBOT_API_PORT}/tcp`]: {},
+    [`${NANOBOT_WEBSOCKET_PORT}/tcp`]: {},
   }
 
   const container = await docker.createContainer({

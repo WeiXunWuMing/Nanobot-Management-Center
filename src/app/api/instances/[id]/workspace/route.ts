@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 import { db, instances } from "@/lib/db"
 import { eq } from "drizzle-orm"
-import { readWorkspaceFile, writeWorkspaceFile, listWorkspaceFiles } from "@/lib/profile"
+import { readWorkspaceFile, writeWorkspaceFile, listWorkspaceFiles, ensureWorkspaceFiles } from "@/lib/profile"
 
 export async function GET(
   request: NextRequest,
@@ -13,6 +13,9 @@ export async function GET(
     if (!instance) {
       return Response.json({ error: "实例不存在" }, { status: 404 })
     }
+
+    // Ensure workspace files exist
+    ensureWorkspaceFiles(instance.name)
 
     const url = new URL(request.url)
     const filePath = url.searchParams.get("path")
