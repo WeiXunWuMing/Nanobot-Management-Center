@@ -91,10 +91,10 @@ export function AgentConfig({ config, onChange }: AgentConfigProps) {
             <Input
               value={currentModel}
               onChange={(e) => updateField("agents", "defaults.model", e.target.value)}
-              placeholder={selectedProvider?.modelPlaceholder || "例如: anthropic/claude-sonnet-4-20250514"}
+              placeholder={selectedProvider?.modelPlaceholder || "例如: claude-sonnet-4-20250514"}
             />
             <p className="text-xs text-muted-foreground">
-              格式: provider/model-name，如 anthropic/claude-sonnet-4-20250514
+              直接填写模型名称，如 deepseek-v4-flash、gpt-4o、claude-sonnet-4-20250514。系统会根据 Provider 自动匹配。
             </p>
           </div>
 

@@ -1,18 +1,85 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft, RefreshCw, Download, Loader2, Search } from "lucide-react"
+
+function cleanDockerLogs(raw: string): string {
+  // Docker log stream has 8-byte header per frame
+  // The raw string may contain binary data from the Docker stream
+  // We need to extract only the text content with timestamps
+  
+  // Split by newline and process each line
+  const lines = raw.split("\n")
+  const cleanedLines: string[] = []
+  
+  for (const line of lines) {
+    // Try to find a timestamp pattern in the line
+    // Docker timestamps look like: 2026-05-12T02:32:03.750678388Z
+    const timestampIndex = line.search(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
+    
+    if (timestampIndex >= 0) {
+      // Extract from timestamp onwards
+      let cleaned = line.substring(timestampIndex)
+      // Remove any remaining control characters (except newline and tab)
+      cleaned = cleaned.replace(/[\x00-\x08\x0e-\x1f\x7f]/g, "")
+      if (cleaned.trim().length > 0) {
+        cleanedLines.push(cleaned)
+      }
+    } else {
+      // No timestamp - might be continuation of previous line
+      // Remove control characters and check if there's useful content
+      const cleaned = line.replace(/[\x00-\x1f\x7f]/g, "").trim()
+      if (cleaned.length > 0) {
+        cleanedLines.push(cleaned)
+      }
+    }
+  }
+  
+  return cleanedLines.join("\n")
+}
+
+function formatLogLine(line: string): string {
+  // Docker timestamp format: 2026-05-12T01:59:30.835866159Z or 2026-05-12T01:59:30.835866159Z message
+  const timestampMatch = line.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z?)\s*(.*)/s)
+  if (!timestampMatch) return line
+
+  const [, timestamp, message] = timestampMatch
+  try {
+    const date = new Date(timestamp)
+    if (isNaN(date.getTime())) return line
+    // Convert to UTC+8
+    const utc8 = new Date(date.getTime() + 8 * 60 * 60 * 1000)
+    const y = utc8.getFullYear()
+    const m = String(utc8.getMonth() + 1).padStart(2, "0")
+    const d = String(utc8.getDate()).padStart(2, "0")
+    const h = String(utc8.getHours()).padStart(2, "0")
+    const min = String(utc8.getMinutes()).padStart(2, "0")
+    const s = String(utc8.getSeconds()).padStart(2, "0")
+    return `${y}-${m}-${d} ${h}:${min}:${s} ${message}`
+  } catch {
+    return line
+  }
+}
+
+function processLogs(raw: string): string {
+  const cleaned = cleanDockerLogs(raw)
+  return cleaned
+    .split("\n")
+    .map((line) => formatLogLine(line.trimEnd()))
+    .filter((line) => line.length > 0)
+    .join("\n")
+}
 
 export default function LogsPage() {
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
 
-  const [logs, setLogs] = useState("")
+  const [rawLogs, setRawLogs] = useState("")
   const [loading, setLoading] = useState(true)
   const [instanceName, setInstanceName] = useState("")
   const [search, setSearch] = useState("")
@@ -20,12 +87,14 @@ export default function LogsPage() {
   const logRef = useRef<HTMLPreElement>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  const processedLogs = useMemo(() => processLogs(rawLogs), [rawLogs])
+
   const fetchLogs = useCallback(async () => {
     try {
       const res = await fetch(`/api/instances/${id}/logs?tail=500`)
       const data = await res.json()
       if (data.logs !== undefined) {
-        setLogs(data.logs)
+        setRawLogs(data.logs)
       }
       if (!instanceName) {
         const instRes = await fetch(`/api/instances/${id}`)
@@ -53,10 +122,10 @@ export default function LogsPage() {
     if (autoScroll && logRef.current) {
       logRef.current.scrollTop = logRef.current.scrollHeight
     }
-  }, [logs, autoScroll])
+  }, [processedLogs, autoScroll])
 
   function handleDownload() {
-    const blob = new Blob([logs], { type: "text/plain" })
+    const blob = new Blob([processedLogs], { type: "text/plain" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
@@ -66,11 +135,11 @@ export default function LogsPage() {
   }
 
   const filteredLogs = search
-    ? logs
+    ? processedLogs
         .split("\n")
         .filter((line) => line.toLowerCase().includes(search.toLowerCase()))
         .join("\n")
-    : logs
+    : processedLogs
 
   return (
     <div className="space-y-6">
@@ -81,7 +150,7 @@ export default function LogsPage() {
         <div className="flex-1">
           <h1 className="text-2xl font-bold">实例日志</h1>
           <p className="text-muted-foreground">
-            {instanceName ? `${instanceName} · ` : ""}每 5 秒自动刷新
+            {instanceName ? `${instanceName} · ` : ""}每 5 秒自动刷新 · UTC+8
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -119,7 +188,19 @@ export default function LogsPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : filteredLogs ? (
-              filteredLogs
+              filteredLogs.split("\n").map((line, i) => {
+                // Color code log levels
+                let className = ""
+                if (line.includes("ERROR")) className = "text-red-500"
+                else if (line.includes("WARNING")) className = "text-yellow-500"
+                else if (line.includes("INFO")) className = "text-blue-400"
+                else if (line.includes("DEBUG")) className = "text-gray-500"
+                return (
+                  <div key={i} className={className}>
+                    {line}
+                  </div>
+                )
+              })
             ) : (
               <span className="text-muted-foreground">暂无日志</span>
             )}

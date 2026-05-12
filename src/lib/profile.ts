@@ -27,6 +27,9 @@ export function createProfile(instanceName: string) {
 
 function copyDirSync(src: string, dest: string) {
   if (!fs.existsSync(src)) return
+  if (!fs.existsSync(dest)) {
+    fs.mkdirSync(dest, { recursive: true })
+  }
   const entries = fs.readdirSync(src, { withFileTypes: true })
   for (const entry of entries) {
     const srcPath = path.join(src, entry.name)
@@ -35,6 +38,11 @@ function copyDirSync(src: string, dest: string) {
       fs.mkdirSync(destPath, { recursive: true })
       copyDirSync(srcPath, destPath)
     } else {
+      // Ensure parent directory exists for file
+      const destDir = path.dirname(destPath)
+      if (!fs.existsSync(destDir)) {
+        fs.mkdirSync(destDir, { recursive: true })
+      }
       fs.copyFileSync(srcPath, destPath)
     }
   }
@@ -175,7 +183,15 @@ export function installPresetSkill(instanceName: string, skillName: string): { s
     return { success: false, error: `预设 skill "${skillName}" 不存在` }
   }
 
-  const skillsDir = path.join(getWorkspacePath(instanceName), "skills")
+  const workspaceDir = getWorkspacePath(instanceName)
+  const skillsDir = path.join(workspaceDir, "skills")
+
+  // Ensure workspace directory exists
+  if (!fs.existsSync(workspaceDir)) {
+    fs.mkdirSync(workspaceDir, { recursive: true })
+  }
+
+  // Ensure skills directory exists
   if (!fs.existsSync(skillsDir)) {
     fs.mkdirSync(skillsDir, { recursive: true })
   }
@@ -185,6 +201,8 @@ export function installPresetSkill(instanceName: string, skillName: string): { s
     return { success: false, error: `skill "${skillName}" 已存在` }
   }
 
+  // Create target directory before copying
+  fs.mkdirSync(targetDir, { recursive: true })
   copyDirSync(presetDir, targetDir)
   return { success: true }
 }

@@ -2,6 +2,7 @@ import { docker } from "@/lib/docker"
 
 export async function GET() {
   try {
+    const errors: string[] = []
     const info: Record<string, unknown> = {
       dockerAvailable: false,
       dockerVersion: null,
@@ -11,7 +12,7 @@ export async function GET() {
       containers: { total: 0, running: 0, nanobot: 0 },
       images: { total: 0, nanobot: false },
       disk: null,
-      errors: [],
+      errors,
     }
 
     // Test Docker connection
@@ -28,7 +29,7 @@ export async function GET() {
         kernelVersion: version.KernelVersion,
       }
     } catch (e) {
-      info.errors.push(`Docker 连接失败: ${String(e)}`)
+      errors.push(`Docker 连接失败: ${String(e)}`)
       return Response.json(info)
     }
 
@@ -43,7 +44,7 @@ export async function GET() {
         ).length,
       }
     } catch (e) {
-      info.errors.push(`获取容器列表失败: ${String(e)}`)
+      errors.push(`获取容器列表失败: ${String(e)}`)
     }
 
     // List images
@@ -56,7 +57,7 @@ export async function GET() {
         ),
       }
     } catch (e) {
-      info.errors.push(`获取镜像列表失败: ${String(e)}`)
+      errors.push(`获取镜像列表失败: ${String(e)}`)
     }
 
     // Get disk info

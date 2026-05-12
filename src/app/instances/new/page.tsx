@@ -74,7 +74,7 @@ export default function NewInstancePage() {
     const config: Record<string, unknown> = {
       agents: {
         defaults: {
-          model: form.model || `${form.provider}/default`,
+          model: form.model || "",
           provider: form.provider,
           workspace: "~/.nanobot/workspace",
           maxTokens: 8192,

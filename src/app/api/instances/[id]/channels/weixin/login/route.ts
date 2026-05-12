@@ -106,12 +106,13 @@ export async function POST(
         const token = result.bot_token || ""
         if (token) {
           // Save token to config
-          const config = readConfig(instance.name) || {}
-          if (!config.channels) config.channels = {}
-          if (!config.channels.weixin) config.channels.weixin = {}
-          config.channels.weixin.token = token
-          config.channels.weixin.enabled = true
-          config.channels.weixin.allowFrom = ["*"]
+          const config = readConfig(instance.name) || {} as Record<string, any>
+          if (!config.channels) config.channels = {} as Record<string, any>
+          if (!(config.channels as Record<string, any>).weixin) (config.channels as Record<string, any>).weixin = {} as Record<string, any>
+          const weixin = (config.channels as Record<string, any>).weixin as Record<string, any>
+          weixin.token = token
+          weixin.enabled = true
+          weixin.allowFrom = ["*"]
           writeConfig(instance.name, config)
 
           // Clear QR ID from description
