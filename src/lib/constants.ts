@@ -1,8 +1,28 @@
 import path from "path"
+import fs from "fs"
 
-export const PROFILES_BASE_DIR =
-  process.env.PROFILES_DIR || "/opt/1panel/docker/compose/nanobot/profiles"
+function detectProfilesDir(): string {
+  // 1. Environment variable takes priority
+  if (process.env.PROFILES_DIR) return process.env.PROFILES_DIR
 
+  // 2. Check parent directory (recommended: project sits next to profiles/)
+  const parentDir = path.resolve(process.cwd(), "..")
+  const parentProfiles = path.join(parentDir, "profiles")
+  if (fs.existsSync(parentProfiles)) return parentProfiles
+
+  // 3. Check if we're inside a nested directory (e.g., /opt/.../nanobot-admin/)
+  //    and profiles is at the root level
+  const segments = process.cwd().split(path.sep)
+  for (let i = segments.length - 1; i >= 1; i--) {
+    const candidate = path.join(segments.slice(0, i).join(path.sep) || "/", "profiles")
+    if (fs.existsSync(candidate)) return candidate
+  }
+
+  // 4. Default: use parent directory's profiles (will be created if needed)
+  return path.join(parentDir, "profiles")
+}
+
+export const PROFILES_BASE_DIR = detectProfilesDir()
 export const DEFAULT_PROFILE_DIR = path.join(PROFILES_BASE_DIR, "default")
 
 export const NANOBOT_IMAGE = process.env.NANOBOT_IMAGE || "nanobot:latest"

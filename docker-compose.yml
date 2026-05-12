@@ -6,11 +6,15 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     volumes:
+      # Docker socket for container management
       - /var/run/docker.sock:/var/run/docker.sock
-      - /opt/1panel/docker/compose/nanobot/profiles:/data/profiles
+      # Profiles directory (nanobot instance data)
+      # Adjust path to match your nanobot installation
+      - ${PROFILES_DIR:-../profiles}:/data/profiles
+      # SQLite database
       - ./data:/app/data
     environment:
       - DOCKER_SOCKET=/var/run/docker.sock
       - PROFILES_DIR=/data/profiles
       - DB_PATH=/app/data/nanobot-admin.db
-      - NANOBOT_IMAGE=ghcr.io/nanobot-ai/nanobot:latest
+      - NANOBOT_IMAGE=nanobot:latest
