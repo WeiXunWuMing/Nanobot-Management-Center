@@ -8,6 +8,7 @@ export const instances = sqliteTable("instances", {
   name: text("name").notNull().unique(),
   containerId: text("container_id"),
   port: integer("port").notNull().unique(),
+  wsPort: integer("ws_port"),
   status: text("status", { enum: ["running", "stopped", "error", "creating"] })
     .notNull()
     .default("stopped"),
@@ -56,6 +57,7 @@ sqlite.exec(`
     name TEXT NOT NULL UNIQUE,
     container_id TEXT,
     port INTEGER NOT NULL UNIQUE,
+    ws_port INTEGER,
     status TEXT NOT NULL DEFAULT 'stopped' CHECK(status IN ('running', 'stopped', 'error', 'creating')),
     description TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -72,5 +74,12 @@ sqlite.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 `)
+
+// Add ws_port column if it doesn't exist (migration for existing databases)
+try {
+  sqlite.exec(`ALTER TABLE instances ADD COLUMN ws_port INTEGER`)
+} catch {
+  // Column already exists, ignore
+}
 
 export const db = drizzle(sqlite)

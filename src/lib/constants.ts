@@ -9,8 +9,11 @@ export const NANOBOT_IMAGE = process.env.NANOBOT_IMAGE || "nanobot:latest"
 export const NANOBOT_PLAYWRIGHT_IMAGE = process.env.NANOBOT_PLAYWRIGHT_IMAGE || "nanobot:playwright"
 export const NANOBOT_PATCHED_IMAGE = process.env.NANOBOT_PATCHED_IMAGE || "nanobot:patched"
 export const NANOBOT_CONTAINER_PORT = 18790
+export const NANOBOT_WEBSOCKET_PORT = 8765
 export const PORT_RANGE_START = 18790
 export const PORT_RANGE_END = 18890
+export const WS_PORT_RANGE_START = 18900
+export const WS_PORT_RANGE_END = 19000
 
 export const INSTANCE_LABEL_PREFIX = "nanobot.managed"
 export const INSTANCE_LABEL_NAME = "nanobot.instance"

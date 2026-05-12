@@ -2,6 +2,7 @@ import Dockerode from "dockerode"
 import {
   NANOBOT_IMAGE,
   NANOBOT_CONTAINER_PORT,
+  NANOBOT_WEBSOCKET_PORT,
   CONTAINER_NAME_PREFIX,
   INSTANCE_LABEL_PREFIX,
   INSTANCE_LABEL_NAME,
@@ -60,6 +61,7 @@ export async function ensureImage(): Promise<void> {
 export interface CreateContainerOptions {
   name: string
   port: number
+  wsPort?: number
   image?: string
   cpuLimit?: number
   memoryLimit?: number
@@ -145,17 +147,27 @@ export async function createAndStartContainer(opts: CreateContainerOptions): Pro
   const containerName = getContainerName(opts.name)
   const profilePath = path.join(PROFILES_BASE_DIR, opts.name)
 
+  const portBindings: Record<string, Array<{ HostIp: string; HostPort: string }>> = {
+    [`${NANOBOT_CONTAINER_PORT}/tcp`]: [{ HostIp: "127.0.0.1", HostPort: String(opts.port) }],
+  }
+
+  const exposedPorts: Record<string, Record<string, never>> = {
+    [`${NANOBOT_CONTAINER_PORT}/tcp`]: {},
+  }
+
+  // Add WebSocket port mapping if provided
+  if (opts.wsPort) {
+    portBindings[`${NANOBOT_WEBSOCKET_PORT}/tcp`] = [{ HostIp: "0.0.0.0", HostPort: String(opts.wsPort) }]
+    exposedPorts[`${NANOBOT_WEBSOCKET_PORT}/tcp`] = {}
+  }
+
   const container = await docker.createContainer({
     Image: image,
     name: containerName,
     Cmd: ["gateway"],
-    ExposedPorts: {
-      [`${NANOBOT_CONTAINER_PORT}/tcp`]: {},
-    },
+    ExposedPorts: exposedPorts,
     HostConfig: {
-      PortBindings: {
-        [`${NANOBOT_CONTAINER_PORT}/tcp`]: [{ HostIp: "127.0.0.1", HostPort: String(opts.port) }],
-      },
+      PortBindings: portBindings,
       Binds: [`${profilePath}:/home/nanobot/.nanobot`],
       CapDrop: ["ALL"],
       CapAdd: ["SYS_ADMIN"],

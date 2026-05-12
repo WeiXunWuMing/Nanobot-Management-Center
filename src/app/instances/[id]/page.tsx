@@ -23,12 +23,14 @@ import { AgentConfig } from "@/components/agent-config"
 import { ChannelConfig } from "@/components/channel-config"
 import { ToolsConfig } from "@/components/tools-config"
 import { PersonaEditor } from "@/components/persona-editor"
+import { ChatPanel } from "@/components/chat-panel"
 
 interface Instance {
   id: string
   name: string
   containerId: string | null
   port: number
+  wsPort: number | null
   status: string
   description: string | null
   createdAt: string
@@ -272,13 +274,18 @@ export default function InstanceDetailPage() {
           setJsonConfig(JSON.stringify(config, null, 2))
         }
       }}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="chat">聊天</TabsTrigger>
           <TabsTrigger value="basic">基础配置</TabsTrigger>
           <TabsTrigger value="channels">渠道配置</TabsTrigger>
           <TabsTrigger value="tools">工具配置</TabsTrigger>
           <TabsTrigger value="persona">人设管理</TabsTrigger>
           <TabsTrigger value="json">JSON 编辑器</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="chat" className="mt-4">
+          <ChatPanel instanceName={instance.name} wsPort={instance.wsPort} status={instance.status} />
+        </TabsContent>
 
         <TabsContent value="basic" className="mt-4">
           <AgentConfig config={config} onChange={handleConfigChange} />

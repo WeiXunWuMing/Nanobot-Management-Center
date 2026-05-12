@@ -3,7 +3,7 @@ import { db, instances, operationLogs } from "@/lib/db"
 import { eq } from "drizzle-orm"
 import { createAndStartContainer, getContainerStatus, removeInstance } from "@/lib/docker"
 import { createProfile, ensureDirectories, readConfig, removeProfile } from "@/lib/profile"
-import { allocatePort } from "@/lib/port-allocator"
+import { allocatePort, allocateWsPort } from "@/lib/port-allocator"
 import { generateId } from "@/lib/utils"
 
 export async function GET() {
@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
 
     ensureDirectories()
     const port = await allocatePort()
+    const wsPort = await allocateWsPort()
     instanceId = generateId()
     instanceName = name
     instancePort = port
@@ -91,6 +92,7 @@ export async function POST(request: NextRequest) {
         id: instanceId,
         name,
         port,
+        wsPort,
         status: "creating",
         description: description || null,
       })
@@ -103,7 +105,7 @@ export async function POST(request: NextRequest) {
       writeConfig(name, config)
     }
 
-    const container = await createAndStartContainer({ name, port, image })
+    const container = await createAndStartContainer({ name, port, wsPort, image })
     const containerInfo = await container.inspect()
 
     db.update(instances)
