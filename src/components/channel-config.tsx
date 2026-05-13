@@ -53,6 +53,9 @@ export function ChannelConfig({ instanceId, config, onChange }: ChannelConfigPro
     if (!newConfig.channels) newConfig.channels = {}
     if (!newConfig.channels[name]) newConfig.channels[name] = {}
     newConfig.channels[name].enabled = enabled
+    if (enabled && !newConfig.channels[name].allowFrom) {
+      newConfig.channels[name].allowFrom = ["*"]
+    }
     onChange(newConfig)
   }
 
