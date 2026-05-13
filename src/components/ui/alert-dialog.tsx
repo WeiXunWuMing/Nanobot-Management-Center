@@ -50,13 +50,29 @@ function AlertDialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDiv
   return <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)} {...props} />
 }
 
-function AlertDialogTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h2 className={cn("text-lg font-semibold", className)} {...props} />
-}
+const AlertDialogTitle = React.forwardRef<
+  React.ComponentRef<typeof AlertDialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPrimitive.Title
+    ref={ref}
+    className={cn("text-lg font-semibold", className)}
+    {...props}
+  />
+))
+AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName
 
-function AlertDialogDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn("text-sm text-muted-foreground", className)} {...props} />
-}
+const AlertDialogDescription = React.forwardRef<
+  React.ComponentRef<typeof AlertDialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPrimitive.Description
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName
 
 const AlertDialogAction = React.forwardRef<
   React.ComponentRef<typeof AlertDialogPrimitive.Action>,
