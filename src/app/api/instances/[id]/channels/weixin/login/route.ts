@@ -28,6 +28,17 @@ except Exception as e:
     sys.stdout.write(json.dumps({"error": str(e)}))
 `
 
+async function waitForContainerRunning(container: any, maxWaitMs = 30000): Promise<boolean> {
+  const start = Date.now()
+  while (Date.now() - start < maxWaitMs) {
+    const info = await container.inspect()
+    if (info.State.Running) return true
+    if (info.State.Status !== "restarting") break
+    await new Promise(r => setTimeout(r, 1000))
+  }
+  return false
+}
+
 const CHECK_QR_SCRIPT = (qrId: string) => `
 import httpx, json, sys, os
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
@@ -57,7 +68,12 @@ export async function POST(
     }
 
     const info = await container.inspect()
-    if (!info.State.Running) {
+    if (info.State.Status === "restarting") {
+      const running = await waitForContainerRunning(container)
+      if (!running) {
+        return Response.json({ error: "容器重启超时，请稍后重试" }, { status: 503 })
+      }
+    } else if (!info.State.Running) {
       return Response.json({ error: "容器未运行，请先启动容器" }, { status: 400 })
     }
 

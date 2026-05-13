@@ -31,6 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface Instance {
   id: string
@@ -59,15 +60,18 @@ const statusConfig: Record<string, { label: string; color: string; dot: string }
 export function InstanceCard({ instance, onRefresh }: InstanceCardProps) {
   const [loading, setLoading] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteProfile, setDeleteProfile] = useState(false)
   const status = statusConfig[instance.status] || statusConfig.stopped
 
   async function handleAction(action: string) {
     setLoading(action)
     try {
-      const url =
-        action === "delete"
-          ? `/api/instances/${instance.id}?keepProfile=true`
-          : `/api/instances/${instance.id}/${action}`
+      let url: string
+      if (action === "delete") {
+        url = `/api/instances/${instance.id}?keepProfile=${!deleteProfile}`
+      } else {
+        url = `/api/instances/${instance.id}/${action}`
+      }
       const method = action === "delete" ? "DELETE" : "POST"
       const res = await fetch(url, { method })
       if (!res.ok) {
@@ -76,6 +80,7 @@ export function InstanceCard({ instance, onRefresh }: InstanceCardProps) {
       } else {
         if (action === "delete") {
           setDeleteDialogOpen(false)
+          setDeleteProfile(false)
         }
         onRefresh()
       }
@@ -235,17 +240,42 @@ export function InstanceCard({ instance, onRefresh }: InstanceCardProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>确认删除</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除实例 <strong>{instance.name}</strong> 吗？容器将被移除，但 profile
-              目录会保留。
+              确定要删除实例 <strong>{instance.name}</strong> 吗？容器将被移除。
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="flex items-center space-x-2 py-2">
+            <Checkbox
+              id="delete-profile"
+              checked={deleteProfile}
+              onCheckedChange={(checked) => setDeleteProfile(checked as boolean)}
+            />
+            <label
+              htmlFor="delete-profile"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              同时删除 profile 数据目录
+            </label>
+          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeleteProfile(false)} disabled={loading === "delete"}>
+              取消
+            </AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => handleAction("delete")}
+              onClick={(e) => {
+                e.preventDefault()
+                handleAction("delete")
+              }}
+              disabled={loading === "delete"}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              删除
+              {loading === "delete" ? (
+                <>
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  删除中...
+                </>
+              ) : (
+                "删除"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
